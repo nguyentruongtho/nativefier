@@ -3,7 +3,11 @@
  * Note: This needs to be attached **prior to imports**, as imports
  * would delay the attachment till after the event has been raised.
  */
-document.addEventListener('DOMContentLoaded', () => {
+// document.addEventListener('DOMContentLoaded', () => {
+//   injectScripts(); // eslint-disable-line @typescript-eslint/no-use-before-define
+// });
+
+(process as NodeJS.EventEmitter).on('document-start', () => {
   injectScripts(); // eslint-disable-line @typescript-eslint/no-use-before-define
 });
 
@@ -63,3 +67,4 @@ ipcRenderer.on('params', (event, message) => {
 ipcRenderer.on('debug', (event, message) => {
   console.info('debug:', message);
 });
+

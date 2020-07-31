@@ -3,7 +3,7 @@ import 'source-map-support/register';
 import fs from 'fs';
 import path from 'path';
 
-import { app, crashReporter, globalShortcut } from 'electron';
+import { app, ipcMain, net, crashReporter, globalShortcut } from 'electron';
 import electronDownload from 'electron-dl';
 
 import { createLoginWindow } from './components/loginWindow';
@@ -148,6 +148,29 @@ if (shouldQuit) {
   app.on('ready', () => {
     mainWindow = createMainWindow(appArgs, app.quit.bind(this), setDockBadge);
     createTrayIcon(appArgs, mainWindow);
+
+    ipcMain.on('xmlHttpRequest', (event, arg) => {
+      var payload = arg.payload;
+      var postData = payload.data;
+      delete payload.data;
+      const request = net.request(payload);
+      request.on('response', (response) => {
+        var data = '';
+        response.on('end', () => {
+            event.reply('xmlHttpRequest_' + arg.callbackId, {
+              status: response.statusCode,
+              statusText: response.statusMessage == 'OK' ? 'success' : 'error',
+              responseText: data
+            });
+        });
+        response.on('data', chunk => {
+            data += chunk;
+        });
+      });
+      request.write(postData);
+      request.end();
+    });
+
 
     // Register global shortcuts
     if (appArgs.globalShortcuts) {
